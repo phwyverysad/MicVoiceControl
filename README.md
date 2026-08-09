@@ -1,59 +1,64 @@
-# 🎙️ Microphone Voice Control (C++ Win32 WASAPI Utility)
+# 🎙️ Microphone Voice Control
 
-**Microphone Voice Control** คือโปรแกรม C++ สำหรับคุมและล็อกระดับเสียงไมโครโฟนบน Windows แบบ Native Win32 + WASAPI ออกแบบมาให้ทำงานอยู่บริเวณ System Tray (ถาดงาน) เปิดปุ๊บติดปั๊บ ใช้ทรัพยากรเครื่องต่ำมาก และเปิดให้นำไปใช้งานได้อย่างอิสระแบบสาธารณะ (Public Domain / Free Software)
-
----
-
-## 🌟 คุณสมบัติหลัก (Key Features)
-
-- **🔇 Left-Click Instant Mute Toggle**: คลิกซ้ายที่ไอคอนใน System Tray เพื่อปิด/เปิดไมโครโฟนทันที
-- **🔴 Pure Red Tinted Muted Icon**: เมื่อปิดไมค์ ไอคอนจะถูกย้อมสีเป็น **สีแดงบริสุทธิ์ 100% (Pure Red Tint)** จากไอคอนเดิมทันทีในหน่วยความจำโดยคงรายละเอียดเดิมไว้ครบถ้วน
-- **🔒 Real-time Volume Lock (0 - 100%)**: ล็อกระดับความดังไมค์ไม่ให้แอปพลิเคชันอื่น (เช่น Discord, Zoom, Windows AGC) หรือปุ่มบนหูฟังแอบปรับเปลี่ยนเอง หากมีการเปลี่ยนแปลง ระบบจะดึงเสียงกลับมายังระดับที่ล็อกไว้ทันทีด้วย `IAudioEndpointVolumeCallback`
-- **🎚️ Context Menu Volume Step & Custom Input**:
-  - เมนูย่อย **"ระดับความดังไมค์ (Mic Volume Level)"** บนเมนูคลิกขวา สามารถเลือกสเต็ปความดัง `0%`, `5%`, `10%`, ..., `100%` ได้ทันที (มีเครื่องหมาย ✔️ ติ๊กที่ค่าปัจจุบัน)
-  - ตัวเลือก **"กำหนดเอง... (Custom Value...)"** เปิดหน้าต่าง Dialog ช่องป้อนตัวเลขสำหรับกรอกระดับเสียง 0 - 100% ได้อิสระ
-- **🔌 Automatic Device Hotplug Detection**: ตรวจจับการเสียบ/ถอดสายไมโครโฟน หรือไมค์ USB ใน Real-time ด้วย `IMMNotificationClient` และอัปเดตรายชื่อไมค์ในเมนูให้อัตโนมัติ
-- **🎙️ Default & Specific Microphone Selection**: สลับไปมาระหว่างไมโครโฟนหลักของระบบ `[System Default]` หรือเลือกไมค์รายตัวตาม Device ID
-- **🌐 Bilingual Support (Thai / English)**: สลับภาษาในการแสดงผลเมนูและ Tooltip ได้ระหว่างภาษาไทยและภาษาอังกฤษ
-- **🚀 Start with Windows**: รองรับการเปิดทำงานอัตโนมัติเมื่อเปิดเครื่องผ่าน Startup Shortcut (`CSIDL_STARTUP`)
-- **🛡️ Clean Antivirus Heuristic Structure**: คอมไพล์ด้วย Static CRT (`/MT`), PE Security Flags (`/GS`, `/DYNAMICBASE`, `/NXCOMPAT`), PDB RSDS Debug Signature (`/Zi /FS`), และ Whole Program Optimization (`/GL /LTCG`) เพื่อขจัดปัญหาการแจ้งเตือนผิดพลาด (False Positives)
+โปรแกรมขนาดเล็ก (Native C++) สำหรับช่วยควบคุมและล็อกระดับเสียงไมโครโฟนบน Windows ให้คงที่ตลอดเวลา ทำงานเงียบๆ อยู่ที่มุมขวาล่าง (System Tray) ไม่กินแรม ไม่หนักเครื่อง และไม่ต้องติดตั้ง
 
 ---
 
-## 📁 โครงสร้างไฟล์ในโปรเจกต์ (Project Structure)
+## ❓ ทำไมถึงต้องใช้โปรแกรมนี้?
 
-```text
-MicVoiceControl/
-├── main.cpp            # จุดเริ่มต้นโปรแกรม (WinMain), System Tray, Hotkey/Click, Mutex & Red Icon Tinting
-├── audio_manager.hpp   # WASAPI Interface Header (Device Enumeration, Volume Lock & Hotplug Callback)
-├── audio_manager.cpp   # WASAPI Interface Implementation
-├── settings.hpp        # INI Settings Manager (%APPDATA%\MicVoiceControl\settings.ini) & Startup Shortcut
-├── lang.hpp            # ภาษาในระบบ (Thai / English Localization Dictionary)
-├── resource.h          # ID Constants สำหรับ Resource และ Dialog Controls
-├── app.rc              # Win32 Resource Script (Embed Icon, Dialog Template, Manifest & VS_VERSION_INFO)
-├── app.ico             # ไฟล์ไอคอนหลักของแอปพลิเคชัน
-├── build.bat           # สคริปต์คอมไพล์โปรแกรมด้วย MSVC Compiler (Visual Studio 64-bit)
-└── README.md           # เอกสารอธิบายโปรเจกต์
-```
+เคยเจอปัญหาเหล่านี้ไหม?
+- คอล Discord / Zoom หรือเล่นเกมอยู่ แล้วเสียงไมค์เบาลงหรือดังขึ้นเองเพราะระบบของ Windows หรือตัวแอปแอบปรับอัตโนมัติ
+- เผลอไปโดนปุ่มปรับเสียงบนหูฟัง
+- อยากมีปุ่มปิด/เปิดไมค์ที่กดง่ายๆ จากหน้าจอ
+
+โปรแกรมนี้จะช่วยล็อกความดังของไมค์ไว้ที่เปอร์เซ็นต์ที่คุณตั้งไว้ตลอดเวลา และปิด/เปิดไมค์ได้ทันทีเพียงคลิกเดียว
 
 ---
 
-## 🛠️ วิธีการคอมไพล์ (Build Instructions)
+## ✨ ฟีเจอร์หลัก
 
-### ความต้องการของระบบ (Prerequisites)
-- ระบบปฏิบัติการ Windows 10 / Windows 11 (64-bit)
-- ติดตั้ง **Visual Studio** (รองรับ 2019, 2022, 2026 หรือ Build Tools) ที่มี C++ Desktop Development Component
+- 🖱️ **คลิกซ้าย 1 ครั้ง**: ปิด / เปิดไมค์ทันที (เมื่อปิดไมค์ ไอคอนจะเปลี่ยนเป็นสีแดง)
+- 🔒 **ล็อกความดังไมค์ (Volume Lock)**: ดึงระดับเสียงไมค์กลับมาค่าเดิมทันทีหากมีโปรแกรมอื่นแอบเปลี่ยน
+- 🎚️ **เลือกความดังง่ายๆ**: คลิกขวาเพื่อเลือกความดัง (0% - 100% ขยับทีละ 5%) หรือกด **กำหนดเอง** เพื่อพิมพ์กรอกตัวเลขที่ต้องการ
+- 🎙️ **เลือกไมโครโฟนได้**: เลือกใช้ไมค์หลักของระบบ `[ค่าเริ่มต้น]` หรือระบุไมค์ตัวที่ต้องการได้เลย
+- 🔌 **ตรวจจับไมค์เสียบเข้า/ถอดออก**: เสียบหูฟังหรือไมค์ USB ใหม่ โปรแกรมจะอัปเดตให้อัตโนมัติทันที
+- 🌐 **รองรับ 2 ภาษา**: สลับภาษาเมนูได้ระหว่าง **ไทย** และ **English**
+- 🚀 **เปิดพร้อมเปิดเครื่อง**: มีเมนูติ๊กเปิดให้ทำงานอัตโนมัติเมื่อเปิด Windows
 
-### ขั้นตอนการคอมไพล์
-1. เปิด **Command Prompt** หรือ **PowerShell** ในโฟลเดอร์โปรเจกต์
-2. รันสคริปต์สั่งคอมไพล์:
+---
+
+## 🚀 วิธีใช้งาน
+
+1. ดาวน์โหลดไฟล์ `MicVoiceControl.exe` แล้วดับเบิลคลิกเปิดใช้งาน
+2. โปรแกรมจะไปทำงานอยู่ที่มุมขวาล่างใกล้ๆ นาฬิกา (System Tray)
+3. **คลิกซ้ายที่ไอคอน** = ปิด/เปิดไมค์ทันที
+4. **คลิกขวาที่ไอคอน** = เปิดเมนูตั้งค่าความดัง เลือกไมค์ ล็อกเสียง และเปลี่ยนภาษา
+
+---
+
+## 🛠️ วิธีคอมไพล์ซอร์สโค้ดเอง (Build from Source)
+
+หากต้องการคอมไพล์ไฟล์ `.exe` เอง:
+1. ติดตั้ง **Visual Studio** (ที่มี C++ Desktop Development)
+2. เปิด Command Prompt ในโฟลเดอร์นี้ แล้วรันสคริปต์:
    ```cmd
    build.bat
    ```
-3. เมื่อคอมไพล์สำเร็จ จะได้ไฟล์ `MicVoiceControl.exe` เพียงไฟล์เดียวที่พร้อมใช้งานแบบ Portable ทันที
+3. จะได้ไฟล์ `MicVoiceControl.exe` ออกมาพร้อมใช้งาน
 
 ---
 
-## 📄 ใบอนุญาต (License)
+## 📁 ไฟล์สำคัญในโปรเจกต์
 
-ซอฟต์แวร์นี้เปิดให้ใช้งาน เผยแพร่ ดัดแปลง และพัฒนาต่อยอดได้อย่างอิสระสาธารณะ (Public Domain / Unlicense)
+- `main.cpp` — โค้ดหลักของโปรแกรม การจัดการ System Tray, คลิกซ้าย/ขวา และไอคอนสีแดง
+- `audio_manager.cpp / .hpp` — เอนจินคุมเสียง WASAPI, ล็อกความดัง และตรวจจับการเสียบไมค์
+- `settings.hpp` — ระบบบันทึกค่าการตั้งค่า (`settings.ini`) และทางลัดเปิดพร้อมเครื่อง
+- `lang.hpp` — ข้อความภาษาไทยและอังกฤษ
+- `app.rc / resource.h` — ไฟล์ทรัพยากร รูปภาพไอคอน และข้อมูลเวอร์ชัน
+- `build.bat` — สคริปต์คำสั่งคอมไพล์โปรแกรม
+
+---
+
+## 📜 License
+
+แจกจ่ายและนำไปใช้งานได้ฟรีแบบเปิดกว้าง (Public Domain / Free Software)
